@@ -282,6 +282,10 @@
     }
     .modal-stat-val { font-size: 0.92rem; font-weight: 700; font-family: 'SF Mono','Fira Code',monospace; }
     .modal-stat-lbl { font-size: 0.63rem; color: var(--muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .params-fields  { padding: 1.25rem 1.4rem 1.4rem; display: flex; flex-direction: column; gap: 1.1rem; }
+    .params-row     { display: flex; gap: 1.25rem; }
+    .params-row .param-field { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; }
+    .param-field .growth-input { width: 100%; box-sizing: border-box; }
 
     /* Range slider */
     input[type="range"] {
@@ -841,9 +845,9 @@
           </select>
           <button class="btn-sm" onclick="normalizePortfolio('a')">Normalize</button>
           <button class="btn-sm" onclick="resetPortfolio('a')">Reset</button>
-          <label class="advisor-toggle" title="Add 1% AUM advisory fee on top of fund expense ratios">
+          <label class="advisor-toggle" title="Add advisory fee on top of fund expense ratios (set fee % in Parameters)">
             <input type="checkbox" id="advisor-a" onchange="renderAll()">
-            Advisor +1%
+            Advisor
           </label>
         </div>
       </div>
@@ -877,9 +881,9 @@
           </select>
           <button class="btn-sm" onclick="normalizePortfolio('b')">Normalize</button>
           <button class="btn-sm" onclick="resetPortfolio('b')">Reset</button>
-          <label class="advisor-toggle" title="Add 1% AUM advisory fee on top of fund expense ratios">
+          <label class="advisor-toggle" title="Add advisory fee on top of fund expense ratios (set fee % in Parameters)">
             <input type="checkbox" id="advisor-b" onchange="renderAll()" checked>
-            Advisor +1%
+            Advisor
           </label>
         </div>
       </div>
@@ -896,29 +900,6 @@
     </div>
 
   </div><!-- /portfolio-grid -->
-
-  <!-- ── Parameters ───────────────────────────────────────────── -->
-  <details class="params-card">
-    <summary>Parameters</summary>
-    <div class="params-body">
-      <div class="param-group">
-        <label class="growth-lbl" for="growth-start">Starting Amount</label>
-        <input class="growth-input" id="growth-start" type="number" min="1000" max="100000000" step="1000" value="1000000" oninput="renderGrowthChart()" title="Initial portfolio value">
-      </div>
-      <div class="param-group">
-        <label class="growth-lbl" for="growth-contrib">Monthly ±</label>
-        <input class="growth-input" id="growth-contrib" type="number" min="-50000" max="50000" step="100" value="0" oninput="renderGrowthChart()" style="width:80px" title="Monthly contribution (+) or withdrawal (−)">
-      </div>
-      <div class="param-group">
-        <label class="growth-lbl" for="infl-rate">Inflation %</label>
-        <input class="growth-input" id="infl-rate" type="number" min="0" max="15" step="0.1" value="2.5" oninput="renderAll()" style="width:64px" title="Assumed annual inflation rate (used for Real mode)">
-      </div>
-      <div class="param-group">
-        <label class="growth-lbl" for="rf-rate">Risk-free %</label>
-        <input class="growth-input" id="rf-rate" type="number" min="0" max="15" step="0.1" value="4.0" oninput="renderAll()" style="width:64px" title="Risk-free rate (10-yr Treasury proxy) used in factor return estimates">
-      </div>
-    </div>
-  </details>
 
   <!-- ── Factor Radar + Growth Projection ─────────────────────── -->
   <div class="viz-grid">
@@ -955,6 +936,9 @@
             </div>
             <div class="growth-mode-toggle">
               <button class="growth-mode-btn" id="mode-advisor" onclick="toggleAdvisor()" title="Show the advisor's accumulated portfolio from fees (advisor-enabled portfolios only)">Advisor</button>
+            </div>
+            <div class="growth-mode-toggle">
+              <button class="growth-mode-btn" onclick="openParamsModal()" title="Edit projection parameters">Parameters</button>
             </div>
           </div>
         </div>
@@ -1041,6 +1025,42 @@
 </div><!-- /tab-tey -->
 
 </main>
+
+<!-- ── Parameters Modal ─────────────────────────────────────── -->
+<div class="modal-backdrop" id="params-modal-backdrop" onclick="closeParamsModal(event)">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div class="modal-ticker" style="font-size:1rem">Parameters</div>
+      <button class="modal-close" onclick="closeParamsModal()">&times;</button>
+    </div>
+    <div class="params-fields">
+      <div class="params-row">
+        <div class="param-field">
+          <label class="growth-lbl" for="growth-start">Starting Amount</label>
+          <input class="growth-input" id="growth-start" type="number" min="1000" max="100000000" step="1000" value="1000000" oninput="renderGrowthChart()">
+        </div>
+        <div class="param-field">
+          <label class="growth-lbl" for="growth-contrib">Monthly ±</label>
+          <input class="growth-input" id="growth-contrib" type="number" min="-50000" max="50000" step="100" value="0" oninput="renderGrowthChart()" title="Monthly contribution (+) or withdrawal (−)">
+        </div>
+      </div>
+      <div class="params-row">
+        <div class="param-field">
+          <label class="growth-lbl" for="infl-rate">Inflation %</label>
+          <input class="growth-input" id="infl-rate" type="number" min="0" max="15" step="0.1" value="2.5" oninput="renderAll()" title="Assumed annual inflation rate (used in Real mode)">
+        </div>
+        <div class="param-field">
+          <label class="growth-lbl" for="rf-rate">Risk-free %</label>
+          <input class="growth-input" id="rf-rate" type="number" min="0" max="15" step="0.1" value="4.0" oninput="renderAll()" title="Risk-free rate (10-yr Treasury proxy) used in return estimates">
+        </div>
+        <div class="param-field">
+          <label class="growth-lbl" for="adv-fee">Advisor Fee %</label>
+          <input class="growth-input" id="adv-fee" type="number" min="0" max="5" step="0.1" value="1.0" oninput="renderAll()" title="Annual AUM advisory fee added on top of fund expense ratios">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ── ETF Info Modal ───────────────────────────────────────── -->
 <div class="modal-backdrop" id="etf-modal-backdrop" onclick="closeEtfModal(event)">
@@ -1395,7 +1415,7 @@ function calcStats(p) {
   });
 
   // Advisor AUM fee: +1% on top of fund expense ratios
-  if (document.getElementById(`advisor-${p}`)?.checked) er += 1.0;
+  if (document.getElementById(`advisor-${p}`)?.checked) er += parseFloat(document.getElementById('adv-fee')?.value) || 1.0;
 
   // Portfolio volatility via Markowitz formula: σ_p = √(ΣᵢΣⱼ wᵢwⱼσᵢσⱼρᵢⱼ)
   let portfolioVariance = 0;
@@ -1702,7 +1722,7 @@ function renderGrowthChart() {
 
   const advisorA   = document.getElementById('advisor-a')?.checked;
   const advisorB   = document.getElementById('advisor-b')?.checked;
-  const ADV_FEE    = 1.0;  // % AUM — must match the fee added in calcStats
+  const ADV_FEE = parseFloat(document.getElementById('adv-fee')?.value) || 1.0;  // % AUM — must match fee used in calcStats
   // Gross rate: add back the advisor's cut to get the rate they reinvest at
   const rAGross = advisorA ? (1 + (sA.geometricReturnNet + ADV_FEE) / 100) / inflAdj - 1 : 0;
   const rBGross = advisorB ? (1 + (sB.geometricReturnNet + ADV_FEE) / 100) / inflAdj - 1 : 0;
@@ -1934,8 +1954,19 @@ function closeEtfModal(e) {
   document.getElementById('etf-modal-backdrop').classList.remove('open');
 }
 
+function openParamsModal() {
+  document.getElementById('params-modal-backdrop').classList.add('open');
+}
+function closeParamsModal(e) {
+  if (e && e.target !== document.getElementById('params-modal-backdrop')) return;
+  document.getElementById('params-modal-backdrop').classList.remove('open');
+}
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.getElementById('etf-modal-backdrop').classList.remove('open');
+  if (e.key === 'Escape') {
+    document.getElementById('etf-modal-backdrop').classList.remove('open');
+    document.getElementById('params-modal-backdrop').classList.remove('open');
+  }
 });
 
 function openEtfModal(tk) {
@@ -2129,8 +2160,10 @@ function copyShareLink() {
   const rr = document.getElementById('rf-rate').value;
   if (gs && gs !== '1000000') params.set('gs', gs);
   if (gc && gc !== '0') params.set('gc', gc);
+  const af = document.getElementById('adv-fee').value;
   if (ir && ir !== '2.5') params.set('ir', ir);
   if (rr && rr !== '4') params.set('rr', rr);
+  if (af && af !== '1') params.set('af', af);
   if (showAdvisor) params.set('av', '1');
   const url = `${location.origin}${location.pathname}?${params}`;
   const btn = document.getElementById('copy-link-btn');
@@ -2166,6 +2199,7 @@ function applyURLState(params) {
   if (params.has('gc')) document.getElementById('growth-contrib').value = params.get('gc');
   if (params.has('ir')) document.getElementById('infl-rate').value = params.get('ir');
   if (params.has('rr')) document.getElementById('rf-rate').value   = params.get('rr');
+  if (params.has('af')) document.getElementById('adv-fee').value   = params.get('af');
   if (params.has('av')) {
     showAdvisor = params.get('av') === '1';
     document.getElementById('mode-advisor')?.classList.toggle('active', showAdvisor);
@@ -2187,6 +2221,7 @@ function saveState() {
       growthMode, showAdvisor,
       inflRate: document.getElementById('infl-rate')?.value,
       rfRate:   document.getElementById('rf-rate')?.value,
+      advFee:   document.getElementById('adv-fee')?.value,
     }));
   } catch(e) {}
 }
@@ -2209,6 +2244,7 @@ function loadState() {
     }
     if (s.inflRate != null) document.getElementById('infl-rate').value = s.inflRate;
     if (s.rfRate   != null) document.getElementById('rf-rate').value   = s.rfRate;
+    if (s.advFee   != null) document.getElementById('adv-fee').value   = s.advFee;
     if (s.showAdvisor != null) {
       showAdvisor = s.showAdvisor;
       document.getElementById('mode-advisor')?.classList.toggle('active', showAdvisor);
