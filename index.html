@@ -1857,14 +1857,8 @@ function renderGrowthChart() {
     summary.innerHTML = `<strong style="color:${color}">${winner}</strong> projects <strong>${fmt(diff)} more</strong> after 30 years${dollarNote} — ${fmt(START)} starting${contribNote}, ${rateA}% vs ${rateB}%${modeNote} CAGR (${dragNote}).`;
   }
 
-  if (showAdvisor) {
-    const advParts = [];
-    if (dataAdA) advParts.push(`<strong style="color:var(--a-color)">${nameA} advisor: ${fmt(dataAdA[YEARS])}</strong>`);
-    if (dataAdB) advParts.push(`<strong style="color:var(--b-color)">${nameB} advisor: ${fmt(dataAdB[YEARS])}</strong>`);
-    const advNote = advParts.length
-      ? `Advisor accumulates ${advParts.join(' · ')} over 30 yrs — fees reinvested at portfolio's gross return.`
-      : `Enable the Advisor fee on a portfolio above to see the advisor's projected wealth.`;
-    summary.innerHTML += `<br><span style="color:var(--muted);font-size:0.78em">${advNote}</span>`;
+  if (showAdvisor && !advisorA && !advisorB) {
+    summary.innerHTML += `<br><span style="color:var(--muted);font-size:0.78em">Enable Advisor on a portfolio to see the advisor's projected wealth.</span>`;
   }
 }
 
