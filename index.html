@@ -57,6 +57,7 @@
       color: var(--text);
     }
     .header-date  { font-size: 0.7rem; color: var(--muted); }
+    .header-right { display: flex; align-items: center; gap: 1rem; }
 
     /* ─── Main layout ───────────────────────────────────────── */
     main {
@@ -763,7 +764,10 @@
   <div class="header-left">
     <div class="header-title">Basis Points</div>
   </div>
-  <div class="header-date">Data · Feb 2026</div>
+  <div class="header-right">
+    <button class="btn-sm" id="copy-link-btn" onclick="copyShareLink()">Copy link</button>
+    <div class="header-date" id="header-data-date"></div>
+  </div>
 </header>
 
 <nav class="tab-bar">
@@ -1992,6 +1996,59 @@ function renderTeyTable() {
 }
 
 // ================================================================
+// SHARE LINK
+// ================================================================
+function copyShareLink() {
+  const params = new URLSearchParams();
+  params.set('a', TICKERS.map(tk => state.a[tk] || 0).join(','));
+  params.set('b', TICKERS.map(tk => state.b[tk] || 0).join(','));
+  const na = document.getElementById('name-a').value;
+  const nb = document.getElementById('name-b').value;
+  if (na && na !== 'Portfolio A') params.set('na', na);
+  if (nb && nb !== 'Portfolio B') params.set('nb', nb);
+  if (document.getElementById('advisor-a').checked) params.set('aa', '1');
+  if (document.getElementById('advisor-b').checked) params.set('ab', '1');
+  params.set('gm', growthMode);
+  const gs = document.getElementById('growth-start').value;
+  const gc = document.getElementById('growth-contrib').value;
+  if (gs && gs !== '1000000') params.set('gs', gs);
+  if (gc && gc !== '0') params.set('gc', gc);
+  const url = `${location.origin}${location.pathname}?${params}`;
+  const btn = document.getElementById('copy-link-btn');
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy link'; }, 1500);
+  }).catch(() => {
+    // Fallback for environments without clipboard API
+    prompt('Copy this link:', url);
+  });
+}
+
+function applyURLState(params) {
+  if (!params.has('a') && !params.has('b')) return false;
+  if (params.has('a')) {
+    const vals = params.get('a').split(',').map(Number);
+    TICKERS.forEach((tk, i) => { state.a[tk] = isNaN(vals[i]) ? 0 : vals[i]; });
+  }
+  if (params.has('b')) {
+    const vals = params.get('b').split(',').map(Number);
+    TICKERS.forEach((tk, i) => { state.b[tk] = isNaN(vals[i]) ? 0 : vals[i]; });
+  }
+  if (params.has('na')) document.getElementById('name-a').value = params.get('na');
+  if (params.has('nb')) document.getElementById('name-b').value = params.get('nb');
+  if (params.has('aa')) document.getElementById('advisor-a').checked = params.get('aa') === '1';
+  if (params.has('ab')) document.getElementById('advisor-b').checked = params.get('ab') === '1';
+  if (params.has('gm')) {
+    growthMode = params.get('gm');
+    document.getElementById('mode-nominal').classList.toggle('active', growthMode === 'nominal');
+    document.getElementById('mode-real').classList.toggle('active', growthMode === 'real');
+  }
+  if (params.has('gs')) document.getElementById('growth-start').value = params.get('gs');
+  if (params.has('gc')) document.getElementById('growth-contrib').value = params.get('gc');
+  return true;
+}
+
+// ================================================================
 // PERSISTENCE
 // ================================================================
 function saveState() {
@@ -2031,8 +2088,10 @@ function loadState() {
 // ================================================================
 function init() {
   document.getElementById('footer-data-date').textContent = DATA_DATE;
+  document.getElementById('header-data-date').textContent = `Data · ${DATA_DATE}`;
   document.querySelectorAll('.method-data-date').forEach(el => el.textContent = DATA_DATE);
-  loadState();
+  const fromURL = applyURLState(new URLSearchParams(location.search));
+  if (!fromURL) loadState();
   buildRows('a');
   buildRows('b');
   refreshTotal('a');
