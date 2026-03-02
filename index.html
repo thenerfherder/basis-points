@@ -490,6 +490,46 @@
     }
 
     /* ─── Methodology ───────────────────────────────────────── */
+    .params-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-top: 1.5rem;
+    }
+    .params-card summary {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 0.65rem 1.25rem;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      user-select: none;
+      color: var(--muted);
+    }
+    .params-card summary::-webkit-details-marker { display: none; }
+    .params-card summary::before {
+      content: '▶';
+      font-size: 0.55rem;
+      color: var(--muted);
+      transition: transform 0.15s;
+    }
+    .params-card[open] summary::before { transform: rotate(90deg); }
+    .params-card summary:hover { color: var(--text); }
+    .params-body {
+      display: flex;
+      gap: 2.5rem;
+      align-items: flex-end;
+      padding: 0.85rem 1.25rem 1rem;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .param-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
     .method-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -857,6 +897,29 @@
 
   </div><!-- /portfolio-grid -->
 
+  <!-- ── Parameters ───────────────────────────────────────────── -->
+  <details class="params-card">
+    <summary>Parameters</summary>
+    <div class="params-body">
+      <div class="param-group">
+        <label class="growth-lbl" for="growth-start">Starting Amount</label>
+        <input class="growth-input" id="growth-start" type="number" min="1000" max="100000000" step="1000" value="1000000" oninput="renderGrowthChart()" title="Initial portfolio value">
+      </div>
+      <div class="param-group">
+        <label class="growth-lbl" for="growth-contrib">Monthly ±</label>
+        <input class="growth-input" id="growth-contrib" type="number" min="-50000" max="50000" step="100" value="0" oninput="renderGrowthChart()" style="width:80px" title="Monthly contribution (+) or withdrawal (−)">
+      </div>
+      <div class="param-group">
+        <label class="growth-lbl" for="infl-rate">Inflation %</label>
+        <input class="growth-input" id="infl-rate" type="number" min="0" max="15" step="0.1" value="2.5" oninput="renderAll()" style="width:64px" title="Assumed annual inflation rate (used for Real mode)">
+      </div>
+      <div class="param-group">
+        <label class="growth-lbl" for="rf-rate">Risk-free %</label>
+        <input class="growth-input" id="rf-rate" type="number" min="0" max="15" step="0.1" value="4.0" oninput="renderAll()" style="width:64px" title="Risk-free rate (10-yr Treasury proxy) used in factor return estimates">
+      </div>
+    </div>
+  </details>
+
   <!-- ── Factor Radar + Growth Projection ─────────────────────── -->
   <div class="viz-grid">
     <div class="viz-col">
@@ -890,22 +953,8 @@
               <button class="growth-mode-btn"        id="mode-nominal" onclick="setGrowthMode('nominal')">Nominal</button>
               <button class="growth-mode-btn active" id="mode-real"    onclick="setGrowthMode('real')">Real</button>
             </div>
-            <div class="growth-input-wrap">
-              <label class="growth-lbl" for="growth-start">Starting $</label>
-              <input class="growth-input" id="growth-start" type="number" min="1000" max="100000000" step="1000" value="1000000" oninput="renderGrowthChart()">
-            </div>
-            <div class="growth-input-wrap">
-              <label class="growth-lbl" for="growth-contrib">±$/mo</label>
-              <input class="growth-input" id="growth-contrib" type="number" min="-50000" max="50000" step="100" value="0" oninput="renderGrowthChart()" style="width:80px" title="Monthly contribution (+) or withdrawal (−)">
-            </div>
-            <div style="width:1px;height:1.2rem;background:var(--border);margin:0 0.1rem"></div>
-            <div class="growth-input-wrap">
-              <label class="growth-lbl" for="infl-rate">Infl %</label>
-              <input class="growth-input" id="infl-rate" type="number" min="0" max="15" step="0.1" value="2.5" oninput="renderAll()" style="width:52px" title="Assumed annual inflation rate (used for Real mode)">
-            </div>
-            <div class="growth-input-wrap">
-              <label class="growth-lbl" for="rf-rate">Rf %</label>
-              <input class="growth-input" id="rf-rate" type="number" min="0" max="15" step="0.1" value="4.0" oninput="renderAll()" style="width:52px" title="Risk-free rate (10-yr Treasury proxy) used in factor return estimates">
+            <div class="growth-mode-toggle">
+              <button class="growth-mode-btn" id="mode-advisor" onclick="toggleAdvisor()" title="Show the advisor's accumulated portfolio from fees (advisor-enabled portfolios only)">Advisor</button>
             </div>
           </div>
         </div>
@@ -1603,12 +1652,20 @@ function renderRadar() {
 // ================================================================
 const DATA_DATE  = 'February 2026';  // update this when refreshing ETF data
 const INFLATION = 2.5;  // assumed annual inflation %
-let growthMode = 'real';
+let growthMode   = 'real';
+let showAdvisor  = false;
 
 function setGrowthMode(mode) {
   growthMode = mode;
   document.getElementById('mode-nominal').classList.toggle('active', mode === 'nominal');
   document.getElementById('mode-real').classList.toggle('active', mode === 'real');
+  renderGrowthChart();
+  saveState();
+}
+
+function toggleAdvisor() {
+  showAdvisor = !showAdvisor;
+  document.getElementById('mode-advisor').classList.toggle('active', showAdvisor);
   renderGrowthChart();
   saveState();
 }
@@ -1643,6 +1700,31 @@ function renderGrowthChart() {
   const rA = (1 + sA.geometricReturnNet / 100) / inflAdj - 1;
   const rB = (1 + sB.geometricReturnNet / 100) / inflAdj - 1;
 
+  const advisorA   = document.getElementById('advisor-a')?.checked;
+  const advisorB   = document.getElementById('advisor-b')?.checked;
+  const ADV_FEE    = 1.0;  // % AUM — must match the fee added in calcStats
+  // Gross rate: add back the advisor's cut to get the rate they reinvest at
+  const rAGross = advisorA ? (1 + (sA.geometricReturnNet + ADV_FEE) / 100) / inflAdj - 1 : 0;
+  const rBGross = advisorB ? (1 + (sB.geometricReturnNet + ADV_FEE) / 100) / inflAdj - 1 : 0;
+
+  // Month-by-month: advisor collects ADV_FEE%/12 of client balance each month,
+  // reinvests at their gross rate. Client grows at net rate (fee already baked in).
+  const simAdvisor = (rNet, rGross, start, contrib, years) => {
+    const rNetMo   = Math.pow(1 + rNet,  1 / 12) - 1;
+    const rGrossMo = Math.pow(1 + rGross, 1 / 12) - 1;
+    let client = start, adv = 0;
+    const data = [0];
+    for (let m = 1; m <= years * 12; m++) {
+      adv    = adv * (1 + rGrossMo) + client * (ADV_FEE / 100 / 12);
+      client = Math.max(0, client * (1 + rNetMo) + contrib);
+      if (m % 12 === 0) data.push(adv);
+    }
+    return data;
+  };
+
+  const dataAdA = (showAdvisor && advisorA) ? simAdvisor(rA, rAGross, START, CONTRIB, YEARS) : null;
+  const dataAdB = (showAdvisor && advisorB) ? simAdvisor(rB, rBGross, START, CONTRIB, YEARS) : null;
+
   // Portfolio value at year y: lump sum + monthly contribution annuity (proper monthly compounding)
   // In real mode, CONTRIB is already in today's dollars — consistent with the real rate used.
   const portFV = (r, y) => {
@@ -1670,7 +1752,10 @@ function renderGrowthChart() {
   const plotW = vW - PAD.left - PAD.right;
   const plotH = vH - PAD.top - PAD.bottom;
 
-  const maxVal = Math.max(...dataAUp, ...dataBUp);
+  const allSeries = [...dataAUp, ...dataBUp];
+  if (dataAdA) allSeries.push(...dataAdA);
+  if (dataAdB) allSeries.push(...dataAdB);
+  const maxVal = Math.max(...allSeries);
   const xS = y => PAD.left + (y / YEARS) * plotW;
   const yS = v => PAD.top + plotH - (v / maxVal) * plotH;
 
@@ -1716,12 +1801,20 @@ function renderGrowthChart() {
   out += `<path d="${pathFor(dataA)}" fill="none" stroke="var(--a-color)" stroke-width="2.5" stroke-linejoin="round"/>`;
   out += `<path d="${pathFor(dataB)}" fill="none" stroke="var(--b-color)" stroke-width="2.5" stroke-linejoin="round"/>`;
 
+  // Advisor dashed lines (drawn on top of client lines)
+  if (dataAdA) out += `<path d="${pathFor(dataAdA)}" fill="none" stroke="var(--a-color)" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.7"/>`;
+  if (dataAdB) out += `<path d="${pathFor(dataAdB)}" fill="none" stroke="var(--b-color)" stroke-width="1.5" stroke-dasharray="5 3" opacity="0.7"/>`;
+
   // End-of-line value labels
   const endA = dataA[YEARS], endB = dataB[YEARS];
   const yEndA = yS(endA).toFixed(1), yEndB = yS(endB).toFixed(1);
   const xEnd  = (PAD.left + plotW + 5).toFixed(1);
   out += `<text x="${xEnd}" y="${yEndA}" dominant-baseline="middle" font-size="10" font-weight="600" fill="var(--a-color)">${fmt(endA)}</text>`;
   out += `<text x="${xEnd}" y="${yEndB}" dominant-baseline="middle" font-size="10" font-weight="600" fill="var(--b-color)">${fmt(endB)}</text>`;
+
+  // Advisor end labels
+  if (dataAdA) out += `<text x="${xEnd}" y="${yS(dataAdA[YEARS]).toFixed(1)}" dominant-baseline="middle" font-size="9" fill="var(--a-color)" opacity="0.8">Adv ${fmt(dataAdA[YEARS])}</text>`;
+  if (dataAdB) out += `<text x="${xEnd}" y="${yS(dataAdB[YEARS]).toFixed(1)}" dominant-baseline="middle" font-size="9" fill="var(--b-color)" opacity="0.8">Adv ${fmt(dataAdB[YEARS])}</text>`;
 
   svg.innerHTML = out;
 
@@ -1742,6 +1835,16 @@ function renderGrowthChart() {
     const color  = endA > endB ? 'var(--a-color)' : 'var(--b-color)';
     const dollarNote = isReal ? ' in today\'s dollars' : '';
     summary.innerHTML = `<strong style="color:${color}">${winner}</strong> projects <strong>${fmt(diff)} more</strong> after 30 years${dollarNote} — ${fmt(START)} starting${contribNote}, ${rateA}% vs ${rateB}%${modeNote} CAGR (${dragNote}).`;
+  }
+
+  if (showAdvisor) {
+    const advParts = [];
+    if (dataAdA) advParts.push(`<strong style="color:var(--a-color)">${nameA} advisor: ${fmt(dataAdA[YEARS])}</strong>`);
+    if (dataAdB) advParts.push(`<strong style="color:var(--b-color)">${nameB} advisor: ${fmt(dataAdB[YEARS])}</strong>`);
+    const advNote = advParts.length
+      ? `Advisor accumulates ${advParts.join(' · ')} over 30 yrs — fees reinvested at portfolio's gross return.`
+      : `Enable the Advisor fee on a portfolio above to see the advisor's projected wealth.`;
+    summary.innerHTML += `<br><span style="color:var(--muted);font-size:0.78em">${advNote}</span>`;
   }
 }
 
@@ -2028,6 +2131,7 @@ function copyShareLink() {
   if (gc && gc !== '0') params.set('gc', gc);
   if (ir && ir !== '2.5') params.set('ir', ir);
   if (rr && rr !== '4') params.set('rr', rr);
+  if (showAdvisor) params.set('av', '1');
   const url = `${location.origin}${location.pathname}?${params}`;
   const btn = document.getElementById('copy-link-btn');
   navigator.clipboard.writeText(url).then(() => {
@@ -2062,6 +2166,10 @@ function applyURLState(params) {
   if (params.has('gc')) document.getElementById('growth-contrib').value = params.get('gc');
   if (params.has('ir')) document.getElementById('infl-rate').value = params.get('ir');
   if (params.has('rr')) document.getElementById('rf-rate').value   = params.get('rr');
+  if (params.has('av')) {
+    showAdvisor = params.get('av') === '1';
+    document.getElementById('mode-advisor')?.classList.toggle('active', showAdvisor);
+  }
   return true;
 }
 
@@ -2076,7 +2184,7 @@ function saveState() {
       nameB: document.getElementById('name-b')?.value,
       advisorA: document.getElementById('advisor-a')?.checked,
       advisorB: document.getElementById('advisor-b')?.checked,
-      growthMode,
+      growthMode, showAdvisor,
       inflRate: document.getElementById('infl-rate')?.value,
       rfRate:   document.getElementById('rf-rate')?.value,
     }));
@@ -2101,6 +2209,10 @@ function loadState() {
     }
     if (s.inflRate != null) document.getElementById('infl-rate').value = s.inflRate;
     if (s.rfRate   != null) document.getElementById('rf-rate').value   = s.rfRate;
+    if (s.showAdvisor != null) {
+      showAdvisor = s.showAdvisor;
+      document.getElementById('mode-advisor')?.classList.toggle('active', showAdvisor);
+    }
   } catch(e) {}
 }
 
