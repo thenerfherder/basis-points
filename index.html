@@ -796,6 +796,7 @@
             <option value="all_avantis">All Avantis Blend</option>
           </select>
           <button class="btn-sm" onclick="normalizePortfolio('a')">Normalize</button>
+          <button class="btn-sm" onclick="resetPortfolio('a')">Reset</button>
           <label class="advisor-toggle" title="Add 1% AUM advisory fee on top of fund expense ratios">
             <input type="checkbox" id="advisor-a" onchange="renderAll()">
             Advisor +1%
@@ -831,6 +832,7 @@
             <option value="all_avantis">All Avantis Blend</option>
           </select>
           <button class="btn-sm" onclick="normalizePortfolio('b')">Normalize</button>
+          <button class="btn-sm" onclick="resetPortfolio('b')">Reset</button>
           <label class="advisor-toggle" title="Add 1% AUM advisory fee on top of fund expense ratios">
             <input type="checkbox" id="advisor-b" onchange="renderAll()" checked>
             Advisor +1%
@@ -925,7 +927,7 @@
   <details class="method-card">
     <summary>Methodology &amp; Data Notes</summary>
     <div class="method-card-body">
-      <p>ETF characteristics are approximate values sourced from Vanguard and Avantis fund data as of February 2026.
+      <p>ETF characteristics are approximate values sourced from Vanguard and Avantis fund data as of <span class="method-data-date"></span>.
          All metrics are estimates and should not be used as the sole basis for investment decisions.</p>
       <ul>
         <li><strong>P/E Ratio:</strong> Blended using the harmonic mean (weighted average of earnings yields), which prevents distortion from high-P/E outliers and correctly reflects the aggregate earnings yield of the portfolio.</li>
@@ -994,7 +996,7 @@
 </div>
 
 <footer>
-  Basis Points &nbsp;·&nbsp; Data approximate as of Feb 2026 &nbsp;·&nbsp; Not investment advice
+  Basis Points &nbsp;·&nbsp; Data approximate as of <span id="footer-data-date"></span> &nbsp;·&nbsp; Not investment advice
 </footer>
 
 <script>
@@ -1138,9 +1140,14 @@ const PRESETS = {
 // ================================================================
 // STATE — default portfolios give a useful starting comparison
 // ================================================================
-const state = {
+const DEFAULTS = {
   a: { VTI:42, VXUS:18, VT:0, AVGE:0, AVGV:0, AVUV:14, AVDV:6, BND:20 },
   b: { VTI:0,  VXUS:0,  VT:80,AVGE:0, AVGV:0, AVUV:0,  AVDV:0, BND:20 },
+};
+
+const state = {
+  a: { ...DEFAULTS.a },
+  b: { ...DEFAULTS.b },
 };
 
 // ================================================================
@@ -1212,6 +1219,18 @@ function applyPreset(p, key) {
     if (nu) nu.value = state[p][tk];
   });
   document.getElementById(`preset-${p}`).value = '';
+  refreshTotal(p);
+  renderAll();
+}
+
+function resetPortfolio(p) {
+  TICKERS.forEach(tk => {
+    state[p][tk] = DEFAULTS[p][tk];
+    const sl = document.getElementById(`sl-${p}-${tk}`);
+    const nu = document.getElementById(`nu-${p}-${tk}`);
+    if (sl) sl.value = state[p][tk];
+    if (nu) nu.value = state[p][tk];
+  });
   refreshTotal(p);
   renderAll();
 }
@@ -1568,6 +1587,7 @@ function renderRadar() {
 // ================================================================
 // GROWTH CHART MODE
 // ================================================================
+const DATA_DATE  = 'February 2026';  // update this when refreshing ETF data
 const INFLATION = 2.5;  // assumed annual inflation %
 let growthMode = 'real';
 
@@ -1576,6 +1596,7 @@ function setGrowthMode(mode) {
   document.getElementById('mode-nominal').classList.toggle('active', mode === 'nominal');
   document.getElementById('mode-real').classList.toggle('active', mode === 'real');
   renderGrowthChart();
+  saveState();
 }
 
 // ================================================================
@@ -1774,6 +1795,7 @@ function renderAll() {
   });
 
   body.innerHTML = html;
+  saveState();
 }
 
 // ================================================================
@@ -1970,9 +1992,47 @@ function renderTeyTable() {
 }
 
 // ================================================================
+// PERSISTENCE
+// ================================================================
+function saveState() {
+  try {
+    localStorage.setItem('basispoints', JSON.stringify({
+      a: state.a, b: state.b,
+      nameA: document.getElementById('name-a')?.value,
+      nameB: document.getElementById('name-b')?.value,
+      advisorA: document.getElementById('advisor-a')?.checked,
+      advisorB: document.getElementById('advisor-b')?.checked,
+      growthMode,
+    }));
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('basispoints');
+    if (!saved) return;
+    const s = JSON.parse(saved);
+    if (s.a) TICKERS.forEach(tk => { if (s.a[tk] != null) state.a[tk] = s.a[tk]; });
+    if (s.b) TICKERS.forEach(tk => { if (s.b[tk] != null) state.b[tk] = s.b[tk]; });
+    if (s.nameA) document.getElementById('name-a').value = s.nameA;
+    if (s.nameB) document.getElementById('name-b').value = s.nameB;
+    if (s.advisorA != null) document.getElementById('advisor-a').checked = s.advisorA;
+    if (s.advisorB != null) document.getElementById('advisor-b').checked = s.advisorB;
+    if (s.growthMode) {
+      growthMode = s.growthMode;
+      document.getElementById('mode-nominal').classList.toggle('active', growthMode === 'nominal');
+      document.getElementById('mode-real').classList.toggle('active', growthMode === 'real');
+    }
+  } catch(e) {}
+}
+
+// ================================================================
 // INIT
 // ================================================================
 function init() {
+  document.getElementById('footer-data-date').textContent = DATA_DATE;
+  document.querySelectorAll('.method-data-date').forEach(el => el.textContent = DATA_DATE);
+  loadState();
   buildRows('a');
   buildRows('b');
   refreshTotal('a');
