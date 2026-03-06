@@ -1371,6 +1371,8 @@ const CAPE_INTL  = 16;    // Approx CAPE for international developed markets (Fe
 const EPS_GROWTH = 4.5;   // Long-run nominal EPS growth, % (real GDP ~2.5% + inflation ~2%)
 const VPREM = 3.5;        // value premium per unit HML %
 const SPREM = 2.5;        // size premium per unit SMB %
+const INTL_MKT_WT = 40;  // global market-cap weight of ex-US equities (approx, FTSE Global All Cap)
+const EM_MKT_WT   = 11;  // global market-cap weight of emerging markets (approx, FTSE Global All Cap)
 
 // Pairwise annual-return correlations (upper triangle, TICKERS order).
 // Used for Markowitz portfolio variance: σ_p² = ΣᵢΣⱼ wᵢwⱼσᵢσⱼρᵢⱼ
@@ -1515,17 +1517,17 @@ const STAT_GROUPS = [
       {
         key:    'intlPct',
         name:   'International Allocation',
-        desc:   'Weighted % in ex-US markets',
-        tip:    'Percentage of portfolio in non-US markets (developed + emerging). VXUS = 97%, VTI = 0%.',
-        fmt:    v => v.toFixed(1) + '%',
+        desc:   `Weighted % in ex-US markets · global mkt wt ≈ ${INTL_MKT_WT}%`,
+        tip:    `Percentage of portfolio in non-US markets (developed + emerging). Global market-cap weight is ~${INTL_MKT_WT}% ex-US (FTSE Global All Cap). Overweight = more international than the world market; underweight = more US-heavy. VXUS = 97%, VTI = 0%.`,
+        fmt:    v => { const d = v - INTL_MKT_WT; return v.toFixed(1) + '% (' + (d >= 0 ? '+' : '') + d.toFixed(0) + '% vs mkt)'; },
         better: 'neutral',
       },
       {
         key:    'emPct',
         name:   'Emerging Markets',
-        desc:   'Weighted % in EM (subset of International)',
-        tip:    'Percentage of portfolio in emerging markets (China, India, Brazil, Taiwan, etc.). Included within the International Allocation figure above. VXUS ≈ 25% EM, VT ≈ 11% EM, AVDV = 0% (developed only), AVUV/VTI = 0% (US only). Approximate — verify on fund fact sheets.',
-        fmt:    v => v.toFixed(1) + '%',
+        desc:   `Weighted % in EM (subset of Intl) · global mkt wt ≈ ${EM_MKT_WT}%`,
+        tip:    `Percentage of portfolio in emerging markets (China, India, Brazil, Taiwan, etc.). Included within the International Allocation figure above. Global market-cap weight is ~${EM_MKT_WT}% EM (FTSE Global All Cap). VXUS ≈ 25% EM, VT ≈ 11% EM, AVDV = 0% (developed only), AVUV/VTI = 0% (US only). Approximate — verify on fund fact sheets.`,
+        fmt:    v => { const d = v - EM_MKT_WT; return v.toFixed(1) + '% (' + (d >= 0 ? '+' : '') + d.toFixed(0) + '% vs mkt)'; },
         better: 'neutral',
       },
     ],
