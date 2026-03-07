@@ -55,19 +55,19 @@ export function loadState() {
     const saved = localStorage.getItem('basispoints');
     if (!saved) return;
     const s = JSON.parse(saved);
-    if (s.a) TICKERS.forEach(tk => { if (s.a[tk] !== null) state.a[tk] = s.a[tk]; });
-    if (s.b) TICKERS.forEach(tk => { if (s.b[tk] !== null) state.b[tk] = s.b[tk]; });
-    if (s.nameA         !== null) settings.nameA         = s.nameA;
-    if (s.nameB         !== null) settings.nameB         = s.nameB;
-    if (s.advisorA      !== null) settings.advisorA      = s.advisorA;
-    if (s.advisorB      !== null) settings.advisorB      = s.advisorB;
+    if (s.a) TICKERS.forEach(tk => { if (s.a[tk] != null) state.a[tk] = s.a[tk]; });
+    if (s.b) TICKERS.forEach(tk => { if (s.b[tk] != null) state.b[tk] = s.b[tk]; });
+    if (s.nameA         != null) settings.nameA         = s.nameA;
+    if (s.nameB         != null) settings.nameB         = s.nameB;
+    if (s.advisorA      != null) settings.advisorA      = s.advisorA;
+    if (s.advisorB      != null) settings.advisorB      = s.advisorB;
     if (s.growthMode)            settings.growthMode    = s.growthMode;
-    if (s.showAdvisor   !== null) settings.showAdvisor   = s.showAdvisor;
-    if (s.growthStart   !== null) settings.growthStart   = +s.growthStart;
-    if (s.growthContrib !== null) settings.growthContrib = +s.growthContrib;
-    if (s.inflRate      !== null) settings.inflRate      = +s.inflRate;
-    if (s.rfRate        !== null) settings.rfRate        = +s.rfRate;
-    if (s.advFee        !== null) settings.advFee        = +s.advFee;
+    if (s.showAdvisor   != null) settings.showAdvisor   = s.showAdvisor;
+    if (s.growthStart   != null) settings.growthStart   = +s.growthStart;
+    if (s.growthContrib != null) settings.growthContrib = +s.growthContrib;
+    if (s.inflRate      != null) settings.inflRate      = +s.inflRate;
+    if (s.rfRate        != null) settings.rfRate        = +s.rfRate;
+    if (s.advFee        != null) settings.advFee        = +s.advFee;
   } catch(e) { console.warn('basispoints: loadState failed', e); }
 }
 
