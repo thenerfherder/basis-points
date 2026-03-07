@@ -1,17 +1,16 @@
 import { calcStats } from './calculations.js';
 import { settings, saveState, applyGrowthMode, applyAdvisorMode } from './state.js';
 
+
 // ================================================================
 // RENDER RADAR CHART
 // ================================================================
 export function renderRadar() {
-  const rf     = parseFloat(document.getElementById('rf-rate')?.value) || 4.0;
-  const advFee = parseFloat(document.getElementById('adv-fee')?.value) || 1.0;
-  const sa = calcStats('a', { rf, advisorOn: document.getElementById('advisor-a')?.checked, advFee });
-  const sb = calcStats('b', { rf, advisorOn: document.getElementById('advisor-b')?.checked, advFee });
+  const sa = calcStats('a', { rf: settings.rfRate, advisorOn: settings.advisorA, advFee: settings.advFee });
+  const sb = calcStats('b', { rf: settings.rfRate, advisorOn: settings.advisorB, advFee: settings.advFee });
 
-  const nameA = document.getElementById('name-a').value.trim() || 'Portfolio A';
-  const nameB = document.getElementById('name-b').value.trim() || 'Portfolio B';
+  const nameA = settings.nameA || 'Portfolio A';
+  const nameB = settings.nameB || 'Portfolio B';
   document.getElementById('radar-leg-a').textContent = nameA;
   document.getElementById('radar-leg-b').textContent = nameB;
 
@@ -96,12 +95,15 @@ export function renderRadar() {
 // ================================================================
 export function setGrowthMode(mode) {
   applyGrowthMode(mode);
+  document.getElementById('mode-nominal').classList.toggle('active', mode === 'nominal');
+  document.getElementById('mode-real').classList.toggle('active', mode === 'real');
   renderGrowthChart();
   saveState();
 }
 
 export function toggleAdvisor() {
   applyAdvisorMode(!settings.showAdvisor);
+  document.getElementById('mode-advisor')?.classList.toggle('active', settings.showAdvisor);
   renderGrowthChart();
   saveState();
 }
@@ -110,12 +112,12 @@ export function toggleAdvisor() {
 // RENDER GROWTH CHART
 // ================================================================
 export function renderGrowthChart() {
-  const svg     = document.getElementById('growth-svg');
-  const summary = document.getElementById('growth-summary');
-  const advisorA = document.getElementById('advisor-a')?.checked;
-  const advisorB = document.getElementById('advisor-b')?.checked;
-  const ADV_FEE  = parseFloat(document.getElementById('adv-fee')?.value) || 1.0;
-  const RF       = parseFloat(document.getElementById('rf-rate')?.value) || 4.0;
+  const svg      = document.getElementById('growth-svg');
+  const summary  = document.getElementById('growth-summary');
+  const advisorA = settings.advisorA;
+  const advisorB = settings.advisorB;
+  const ADV_FEE  = settings.advFee;
+  const RF       = settings.rfRate;
 
   const sA = calcStats('a', { rf: RF, advisorOn: advisorA, advFee: ADV_FEE });
   const sB = calcStats('b', { rf: RF, advisorOn: advisorB, advFee: ADV_FEE });
@@ -129,11 +131,11 @@ export function renderGrowthChart() {
     return empty('Set allocations above to see projection.');
   }
 
-  const START    = Math.max(1000, parseFloat(document.getElementById('growth-start').value) || 1000000);
-  const CONTRIB  = parseFloat(document.getElementById('growth-contrib').value) || 0;
-  const YEARS    = 30;
-  const isReal   = settings.growthMode === 'real';
-  const INFLATION = parseFloat(document.getElementById('infl-rate')?.value) || 2.5;
+  const START     = Math.max(1000, settings.growthStart);
+  const CONTRIB   = settings.growthContrib;
+  const YEARS     = 30;
+  const isReal    = settings.growthMode === 'real';
+  const INFLATION = settings.inflRate;
   const inflAdj  = isReal ? (1 + INFLATION / 100) : 1;
 
   const rA = (1 + sA.geometricReturnNet / 100) / inflAdj - 1;
@@ -239,8 +241,8 @@ export function renderGrowthChart() {
 
   svg.innerHTML = out;
 
-  const nameA = document.getElementById('name-a').value.trim() || 'Portfolio A';
-  const nameB = document.getElementById('name-b').value.trim() || 'Portfolio B';
+  const nameA = settings.nameA || 'Portfolio A';
+  const nameB = settings.nameB || 'Portfolio B';
   const diff  = Math.abs(endA - endB);
   const rateA = (rA * 100).toFixed(2), rateB = (rB * 100).toFixed(2);
   const modeNote   = isReal ? ` real (${INFLATION}% infl.)` : ' nominal';
