@@ -60,6 +60,13 @@ export function buildRows(p) {
 // ================================================================
 // INPUT HANDLERS
 // ================================================================
+function syncDOM(p, tk) {
+  const sl = document.getElementById(`sl-${p}-${tk}`);
+  const nu = document.getElementById(`nu-${p}-${tk}`);
+  if (sl) sl.value = state[p][tk];
+  if (nu) nu.value = state[p][tk];
+}
+
 function applyValue(p, tk, v) {
   state[p][tk] = v;
   refreshTotal(p);
@@ -85,10 +92,7 @@ export function applyPreset(p, key) {
   const preset = PRESETS[key];
   TICKERS.forEach(tk => {
     state[p][tk] = preset[tk] ?? 0;
-    const sl = document.getElementById(`sl-${p}-${tk}`);
-    const nu = document.getElementById(`nu-${p}-${tk}`);
-    if (sl) sl.value = state[p][tk];
-    if (nu) nu.value = state[p][tk];
+    syncDOM(p, tk);
   });
   document.getElementById(`preset-${p}`).value = '';
   refreshTotal(p);
@@ -98,10 +102,7 @@ export function applyPreset(p, key) {
 export function resetPortfolio(p) {
   TICKERS.forEach(tk => {
     state[p][tk] = DEFAULTS[p][tk];
-    const sl = document.getElementById(`sl-${p}-${tk}`);
-    const nu = document.getElementById(`nu-${p}-${tk}`);
-    if (sl) sl.value = state[p][tk];
-    if (nu) nu.value = state[p][tk];
+    syncDOM(p, tk);
   });
   refreshTotal(p);
   if (_renderAll) _renderAll();
@@ -118,12 +119,7 @@ export function normalizePortfolio(p) {
     const largest = TICKERS.reduce((a, b) => state[p][a] >= state[p][b] ? a : b);
     state[p][largest] += (100 - newTotal);
   }
-  TICKERS.forEach(tk => {
-    const sl = document.getElementById(`sl-${p}-${tk}`);
-    const nu = document.getElementById(`nu-${p}-${tk}`);
-    if (sl) sl.value = state[p][tk];
-    if (nu) nu.value = state[p][tk];
-  });
+  TICKERS.forEach(tk => syncDOM(p, tk));
   refreshTotal(p);
   if (_renderAll) _renderAll();
 }

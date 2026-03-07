@@ -1,6 +1,8 @@
 import { TEY_FUNDS, TEY_BRACKETS } from './data.js';
 import { openModal } from './ui.js';
 
+const badge = f => ({ cls: f.taxExempt ? 'exempt' : 'taxable', txt: f.taxExempt ? 'Tax-Exempt' : 'Taxable' });
+
 export function openTeyModal(i) {
   const f = TEY_FUNDS[i];
   openModal(f.ticker, f.name, f.tip, [
@@ -30,8 +32,7 @@ export function buildTeyFundCards() {
 
     TEY_FUNDS.forEach((f, i) => {
       if (f.category !== grp.key) return;
-      const badgeCls = f.taxExempt ? 'exempt' : 'taxable';
-      const badgeTxt = f.taxExempt ? 'Tax-Exempt' : 'Taxable';
+      const { cls: badgeCls, txt: badgeTxt } = badge(f);
       const yieldLbl = grp.key === 'mmf' ? '7-Day Yield' : 'SEC Yield';
 
       const card = document.createElement('div');
@@ -76,8 +77,7 @@ export function renderTeyTable() {
   html += `<th colspan="${mmfFunds.length}" class="th-group">Money Market Funds</th>`;
   html += '</tr><tr>';
   TEY_FUNDS.forEach(f => {
-    const badgeCls = f.taxExempt ? 'exempt' : 'taxable';
-    const badgeTxt = f.taxExempt ? 'Tax-Exempt' : 'Taxable';
+    const { cls: badgeCls, txt: badgeTxt } = badge(f);
     html += `<th>${f.ticker}<span class="th-badge ${badgeCls}">${badgeTxt} · ${f.yield.toFixed(2)}%</span></th>`;
   });
   html += '</tr></thead><tbody>';

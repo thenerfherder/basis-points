@@ -143,8 +143,7 @@ export function renderGrowthChart() {
   const rA = (1 + sA.geometricReturnNet / 100) / inflAdj - 1;
   const rB = (1 + sB.geometricReturnNet / 100) / inflAdj - 1;
 
-  const rAGross  = advisorA ? (1 + (sA.geometricReturnNet + ADV_FEE) / 100) / inflAdj - 1 : 0;
-  const rBGross  = advisorB ? (1 + (sB.geometricReturnNet + ADV_FEE) / 100) / inflAdj - 1 : 0;
+  const grossRate = (stats) => (1 + (stats.geometricReturnNet + ADV_FEE) / 100) / inflAdj - 1;
 
   const simAdvisor = (rNet, rGross, start, contrib, years) => {
     const rNetMo   = Math.pow(1 + rNet,  1 / 12) - 1;
@@ -159,8 +158,8 @@ export function renderGrowthChart() {
     return data;
   };
 
-  const dataAdA = (settings.showAdvisor && advisorA) ? simAdvisor(rA, rAGross, START, CONTRIB, YEARS) : null;
-  const dataAdB = (settings.showAdvisor && advisorB) ? simAdvisor(rB, rBGross, START, CONTRIB, YEARS) : null;
+  const dataAdA = (settings.showAdvisor && advisorA) ? simAdvisor(rA, grossRate(sA), START, CONTRIB, YEARS) : null;
+  const dataAdB = (settings.showAdvisor && advisorB) ? simAdvisor(rB, grossRate(sB), START, CONTRIB, YEARS) : null;
 
   const portFV = (r, y) => {
     const lump = START * Math.pow(1 + r, y);
