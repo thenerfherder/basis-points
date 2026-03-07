@@ -5,6 +5,7 @@ import { renderAll } from './render.js';
 import { setGrowthMode, toggleAdvisor, renderGrowthChart } from './charts.js';
 import { closeEtfModal, openParamsModal, closeParamsModal } from './ui.js';
 import { buildTeyFundCards, renderTeyTable, setTeyBracket } from './tey.js';
+import { initRisk } from './risk.js';
 
 // Wire renderAll into portfolio so it can trigger re-renders without a circular import
 setRenderAll(renderAll);
@@ -153,6 +154,9 @@ function init() {
     bracketSel.appendChild(opt);
   });
   bracketSel.addEventListener('change', e => setTeyBracket(e.target.value ? +e.target.value : null));
+
+  // ── Risk Profile tool ────────────────────────────────────
+  initRisk();
 }
 
 init();

@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="css/portfolio.css">
   <link rel="stylesheet" href="css/stats.css">
   <link rel="stylesheet" href="css/tey.css">
+  <link rel="stylesheet" href="css/risk.css">
 </head>
 <body>
 
@@ -25,6 +26,7 @@
 <nav class="tab-bar">
   <button class="tab-btn active" data-tab="allocation">Asset Allocation</button>
   <button class="tab-btn"        data-tab="tey">Tax Equivalent Yield</button>
+  <button class="tab-btn"        data-tab="risk">Risk Profile</button>
 </nav>
 
 <main>
@@ -221,6 +223,92 @@
   </details>
 
 </div><!-- /tab-tey -->
+
+<div id="tab-risk" class="tab-panel">
+
+  <!-- ── Snapshot + Slider ──────────────────────────────── -->
+  <div class="section-label">Risk Profile <span class="section-label-note">— Vanguard historical data, 1926–2024 · US stocks &amp; US bonds</span></div>
+  <div class="stats-card" style="margin-bottom:1.5rem">
+    <div class="stats-card-header">
+      <span class="stats-card-title">Portfolio Risk Snapshot</span>
+      <span id="risk-snap-equity" style="font-size:0.82rem;color:var(--muted)">60% Stocks / 40% Bonds</span>
+    </div>
+    <div class="risk-snapshot-body">
+      <div class="risk-slider-ends">
+        <span>100% Bonds</span>
+        <span>100% Stocks</span>
+      </div>
+      <span id="risk-equity-display">60% Stocks / 40% Bonds</span>
+      <input type="range" id="risk-equity-slider" min="0" max="100" step="10" value="60">
+      <div class="risk-stats-grid">
+        <div class="risk-stat-box">
+          <div class="risk-stat-label">Avg Annual Return</div>
+          <div class="risk-stat-value" id="risk-snap-ret">—</div>
+          <div class="risk-stat-sub">historical nominal</div>
+        </div>
+        <div class="risk-stat-box">
+          <div class="risk-stat-label">Annual Volatility (σ)</div>
+          <div class="risk-stat-value" id="risk-snap-vol">—</div>
+          <div class="risk-stat-sub">std dev of annual returns</div>
+        </div>
+        <div class="risk-stat-box">
+          <div class="risk-stat-label">Worst Calendar Year</div>
+          <div class="risk-stat-value" id="risk-snap-worst">—</div>
+          <div class="risk-stat-sub">largest single-year loss</div>
+        </div>
+        <div class="risk-stat-box">
+          <div class="risk-stat-label">Best Calendar Year</div>
+          <div class="risk-stat-value" id="risk-snap-best">—</div>
+          <div class="risk-stat-sub">largest single-year gain</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Charts ─────────────────────────────────────────── -->
+  <div class="viz-grid">
+    <div class="viz-col">
+      <div class="section-label">Volatility by Equity Allocation</div>
+      <div class="stats-card">
+        <div class="stats-card-header">
+          <span class="stats-card-title">Annual Volatility (σ)</span>
+          <span style="font-size:0.7rem;color:var(--muted);margin-left:auto">Adding bonds first <em>reduces</em> risk — then adding more equity raises it</span>
+        </div>
+        <svg id="risk-vol-svg" width="100%"></svg>
+      </div>
+    </div>
+    <div class="viz-col">
+      <div class="section-label">Downside Risk by Equity Allocation</div>
+      <div class="stats-card">
+        <div class="stats-card-header">
+          <span class="stats-card-title">Worst Calendar Year Return</span>
+          <span style="font-size:0.7rem;color:var(--muted);margin-left:auto">How bad can a single year get?</span>
+        </div>
+        <svg id="risk-worst-svg" width="100%"></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Methodology ──────────────────────────────────────── -->
+  <details class="method-card">
+    <summary>Methodology &amp; Data Notes</summary>
+    <div class="method-card-body">
+      <p>Historical risk statistics for blended stock/bond portfolios, sourced from Vanguard Portfolio Allocation Models covering 1926–2024.
+         Stocks are represented by US equity indices (S&amp;P 500 and predecessors); bonds by US investment-grade indices (Bloomberg US Aggregate predecessors).
+         All figures are approximate and rounded. Annual returns are nominal.</p>
+      <ul>
+        <li><strong>Annual Volatility (σ):</strong> The standard deviation of annual calendar-year returns. A portfolio with σ=10% returned within roughly ±10% of its mean in about two-thirds of years.</li>
+        <li><strong>The U-shape in volatility:</strong> A key insight from portfolio theory — adding bonds to an all-stock portfolio initially <em>decreases</em> total volatility, because bonds and stocks are imperfectly correlated. The minimum-volatility portfolio historically sits around 20–30% equity. Adding bonds beyond that point offers only marginal further risk reduction, and an all-bond portfolio can itself be volatile (e.g., 2022: bonds lost ~13%).</li>
+        <li><strong>Worst Calendar Year:</strong> The single worst annual return observed in the historical record for that equity allocation. This is a measure of short-term downside risk, not the maximum peak-to-trough drawdown. The deepest multi-year drawdowns (e.g., 1929–1932 for equities: −83% cumulative) are far larger than a single calendar year shows.</li>
+        <li><strong>Best Calendar Year:</strong> The single best annual return observed. Note that bond-heavy portfolios had strong best years in 1982 (when interest rates peaked and fell sharply), which is why the best-year figure does not monotonically increase with equity allocation.</li>
+        <li><strong>Return vs. Risk trade-off:</strong> Higher equity allocations have delivered higher long-run average returns but also higher volatility and deeper periodic losses. The right allocation depends on your time horizon, ability to tolerate losses without selling, and need for the money.</li>
+        <li><strong>Limitations:</strong> This data reflects US stocks and US bonds only. International diversification can alter these characteristics. Past return and risk figures do not guarantee future results. Rebalancing frequency and taxes are not modelled.</li>
+        <li><strong>This tool is for educational and illustrative purposes only. Not investment advice.</strong></li>
+      </ul>
+    </div>
+  </details>
+
+</div><!-- /tab-risk -->
 
 </main>
 
