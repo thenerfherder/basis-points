@@ -1,6 +1,8 @@
 import { calcStats } from './calculations.js';
 import { settings, saveState, applyGrowthMode, applyAdvisorMode } from './state.js';
 
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
 
 // ================================================================
 // RENDER RADAR CHART
@@ -256,7 +258,7 @@ export function renderGrowthChart() {
     const winner    = endA > endB ? nameA : nameB;
     const color     = endA > endB ? 'var(--a-color)' : 'var(--b-color)';
     const dollarNote = isReal ? ' in today\'s dollars' : '';
-    summary.innerHTML = `<strong style="color:${color}">${winner}</strong> projects <strong>${fmt(diff)} more</strong> after 30 years${dollarNote} — ${fmt(START)} starting${contribNote}, ${rateA}% vs ${rateB}%${modeNote} CAGR (${dragNote}).`;
+    summary.innerHTML = `<strong style="color:${color}">${esc(winner)}</strong> projects <strong>${fmt(diff)} more</strong> after 30 years${dollarNote} — ${fmt(START)} starting${contribNote}, ${rateA}% vs ${rateB}%${modeNote} CAGR (${dragNote}).`;
   }
 
   if (settings.showAdvisor && !advisorA && !advisorB) {

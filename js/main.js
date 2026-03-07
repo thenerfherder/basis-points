@@ -1,5 +1,5 @@
-import { DATA_DATE, PRESET_OPTIONS } from './data.js';
-import { settings, applyURLState, loadState, copyShareLink } from './state.js';
+import { DATA_DATE, PRESET_OPTIONS, TICKERS } from './data.js';
+import { state, settings, applyURLState, loadState } from './state.js';
 import { buildRows, refreshTotal, applyPreset, normalizePortfolio, resetPortfolio, setRenderAll } from './portfolio.js';
 import { renderAll } from './render.js';
 import { setGrowthMode, toggleAdvisor, renderGrowthChart } from './charts.js';
@@ -8,6 +8,31 @@ import { buildTeyFundCards, renderTeyTable } from './tey.js';
 
 // Wire renderAll into portfolio so it can trigger re-renders without a circular import
 setRenderAll(renderAll);
+
+function copyShareLink() {
+  const params = new URLSearchParams();
+  params.set('a', TICKERS.map(tk => state.a[tk] || 0).join(','));
+  params.set('b', TICKERS.map(tk => state.b[tk] || 0).join(','));
+  if (settings.nameA && settings.nameA !== 'Portfolio A') params.set('na', settings.nameA);
+  if (settings.nameB && settings.nameB !== 'Portfolio B') params.set('nb', settings.nameB);
+  if (settings.advisorA)              params.set('aa', '1');
+  if (settings.advisorB)              params.set('ab', '1');
+  params.set('gm', settings.growthMode);
+  if (settings.growthStart   !== 1000000) params.set('gs', settings.growthStart);
+  if (settings.growthContrib !== 0)       params.set('gc', settings.growthContrib);
+  if (settings.inflRate      !== 2.5)     params.set('ir', settings.inflRate);
+  if (settings.rfRate        !== 4.0)     params.set('rr', settings.rfRate);
+  if (settings.advFee        !== 1.0)     params.set('af', settings.advFee);
+  if (settings.showAdvisor)               params.set('av', '1');
+  const url = `${location.origin}${location.pathname}?${params}`;
+  const btn = document.getElementById('copy-link-btn');
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = 'Copied!';
+    setTimeout(() => { btn.textContent = 'Copy link'; }, 1500);
+  }).catch(() => {
+    prompt('Copy this link:', url);
+  });
+}
 
 // Sync all DOM inputs to match the current settings object.
 // Called once after state is restored from URL or localStorage.
