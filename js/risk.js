@@ -58,9 +58,8 @@ function renderRiskChart(svgId, dataKey, yMin, yMax, color, fmtY, opts = {}) {
   const PW = VW - ML - MR;
   const PH = VH - MT - MB;
 
-  // X axis is inverted: left = 100% stocks (high risk), right = 0% stocks (all bonds, low risk).
-  // This matches the conventional "adding bonds reduces risk" left-to-right narrative.
-  const mapX = eq => ML + ((100 - eq) / 100) * PW;
+  // X axis: left = 0% equity (all bonds), right = 100% equity (all stocks).
+  const mapX = eq => ML + (eq / 100) * PW;
   const mapY = val => MT + PH - ((val - yMin) / (yMax - yMin)) * PH;
 
   let s = '';
@@ -89,7 +88,7 @@ function renderRiskChart(svgId, dataKey, yMin, yMax, color, fmtY, opts = {}) {
   // X axis caption
   const captY = (MT + PH + 30).toFixed(1);
   const captX = (ML + PW / 2).toFixed(1);
-  s += `<text x="${captX}" y="${captY}" text-anchor="middle" font-size="9.5" fill="var(--muted)" font-family="${FONT}">← All Stocks · % Equity · All Bonds →</text>`;
+  s += `<text x="${captX}" y="${captY}" text-anchor="middle" font-size="9.5" fill="var(--muted)" font-family="${FONT}">← All Bonds · % Equity · All Stocks →</text>`;
 
   // Selected equity vertical guide line (drawn behind the curve)
   const selX = mapX(_selectedEquity).toFixed(1);

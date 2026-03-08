@@ -79,3 +79,7 @@
   display: block;
   padding: 0.25rem;
 }
+
+#risk-recovery-svg {
+  height: 262px;
+}
