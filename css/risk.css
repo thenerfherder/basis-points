@@ -75,11 +75,8 @@
 /* ─── Risk Chart SVGs ───────────────────────────────────── */
 #risk-vol-svg,
 #risk-worst-svg,
-#risk-recovery-svg {
+#risk-recovery-svg,
+#risk-dist-svg {
   display: block;
   padding: 0.25rem;
-}
-
-#risk-recovery-svg {
-  height: 262px;
 }

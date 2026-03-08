@@ -265,7 +265,7 @@
     </div>
   </div>
 
-  <!-- ── Charts ─────────────────────────────────────────── -->
+  <!-- ── Charts row 1 ──────────────────────────────────────── -->
   <div class="viz-grid">
     <div class="viz-col">
       <div class="section-label">Volatility by Equity Allocation</div>
@@ -289,14 +289,28 @@
     </div>
   </div>
 
-  <!-- ── Time to Recovery ──────────────────────────────────── -->
-  <div class="section-label">Time to Recovery by Equity Allocation</div>
-  <div class="stats-card" style="margin-bottom:1.5rem">
-    <div class="stats-card-header">
-      <span class="stats-card-title">Maximum Years to Full Recovery</span>
-      <span style="font-size:0.7rem;color:var(--muted);margin-left:auto">Worst historical drawdown — how long until you were whole again?</span>
+  <!-- ── Charts row 2 ──────────────────────────────────────── -->
+  <div class="viz-grid">
+    <div class="viz-col">
+      <div class="section-label">Time to Recovery by Equity Allocation</div>
+      <div class="stats-card">
+        <div class="stats-card-header">
+          <span class="stats-card-title">Maximum Years to Full Recovery</span>
+          <span style="font-size:0.7rem;color:var(--muted);margin-left:auto">Worst historical drawdown — how long until you were whole again?</span>
+        </div>
+        <svg id="risk-recovery-svg" width="100%"></svg>
+      </div>
     </div>
-    <svg id="risk-recovery-svg" width="100%"></svg>
+    <div class="viz-col">
+      <div class="section-label">Distribution of Annual Returns</div>
+      <div class="stats-card">
+        <div class="stats-card-header">
+          <span class="stats-card-title">Distribution of Annual Returns</span>
+          <span style="font-size:0.7rem;color:var(--muted);margin-left:auto">Selected allocation · normal approximation · shading = ±1σ</span>
+        </div>
+        <svg id="risk-dist-svg" width="100%"></svg>
+      </div>
+    </div>
   </div>
 
   <!-- ── Methodology ──────────────────────────────────────── -->

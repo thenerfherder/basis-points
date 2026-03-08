@@ -29,6 +29,14 @@ let _selectedEquity = 80;
 
 const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
 
+// Normal distribution helpers for the distribution chart.
+function erf(x) {
+  const t = 1 / (1 + 0.3275911 * Math.abs(x));
+  const y = 1 - (0.254829592*t - 0.284496736*t**2 + 1.421413741*t**3 - 1.453152027*t**4 + 1.061405429*t**5) * Math.exp(-x * x);
+  return x < 0 ? -y : y;
+}
+function normalCDF(z) { return 0.5 * (1 + erf(z / Math.SQRT2)); }
+
 // Catmull-Rom spline converted to cubic bezier for smooth SVG paths.
 function smoothPath(pts) {
   if (pts.length < 2) return '';
@@ -167,6 +175,104 @@ export function renderRiskCharts() {
     v => v.toFixed(0) + ' yr' + (v === 1 ? '' : 's'),
     { gridLines: [2, 4, 6, 8, 10, 12, 14] }
   );
+  renderDistributionChart();
+}
+
+function renderDistributionChart() {
+  const svg = document.getElementById('risk-dist-svg');
+  if (!svg) return;
+
+  const d = RISK_DATA.find(r => r.equity === _selectedEquity);
+  if (!d) return;
+
+  const mu = d.ret;
+  const sigma = d.vol;
+
+  const ML = 46, MT = 20, MR = 18, MB = 42;
+  const VW = 480, VH = 262;
+  const PW = VW - ML - MR;
+  const PH = VH - MT - MB;
+
+  const BIN_W = 5;
+  const X_MIN = -60, X_MAX = 65; // 25 bins of 5%
+
+  const bins = [];
+  for (let lo = X_MIN; lo < X_MAX; lo += BIN_W) {
+    const hi = lo + BIN_W;
+    const prob = normalCDF((hi - mu) / sigma) - normalCDF((lo - mu) / sigma);
+    bins.push({ lo, hi, mid: (lo + hi) / 2, prob });
+  }
+
+  const maxProb = Math.max(...bins.map(b => b.prob));
+  const yMax = Math.ceil(maxProb / 0.05) * 0.05;
+
+  const mapX = v => ML + ((v - X_MIN) / (X_MAX - X_MIN)) * PW;
+  const mapY = v => MT + PH - (v / yMax) * PH;
+  const barW = PW / ((X_MAX - X_MIN) / BIN_W);
+
+  let s = '';
+
+  // ±1σ shaded band
+  const bx1 = mapX(mu - sigma), bx2 = mapX(mu + sigma);
+  s += `<rect x="${bx1.toFixed(1)}" y="${MT}" width="${(bx2 - bx1).toFixed(1)}" height="${PH}" fill="var(--blue)" fill-opacity="0.06" stroke="none"/>`;
+
+  // Y grid lines (every 5%)
+  for (let v = 0.05; v <= yMax + 0.001; v += 0.05) {
+    const y = mapY(v).toFixed(1);
+    s += `<line x1="${ML}" y1="${y}" x2="${ML + PW}" y2="${y}" stroke="var(--border)" stroke-width="1"/>`;
+    s += `<text x="${ML - 6}" y="${y}" text-anchor="end" dominant-baseline="middle" font-size="10" fill="var(--muted)" font-family="${FONT}">${Math.round(v * 100)}%</text>`;
+  }
+
+  // Zero-return vertical line
+  const x0 = mapX(0).toFixed(1);
+  s += `<line x1="${x0}" y1="${MT}" x2="${x0}" y2="${MT + PH}" stroke="#8b949e" stroke-width="1.5"/>`;
+
+  // Bars
+  for (const bin of bins) {
+    const bx = mapX(bin.lo);
+    const by = mapY(bin.prob);
+    const bh = Math.max(0, (MT + PH) - by);
+    const color = bin.mid < 0 ? '#f85149' : '#58a6ff';
+    s += `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${(barW - 1).toFixed(1)}" height="${bh.toFixed(1)}" fill="${color}" fill-opacity="0.55"/>`;
+  }
+
+  // Normal curve overlay
+  const N = 300;
+  let curvePath = '';
+  for (let i = 0; i <= N; i++) {
+    const v = X_MIN + (X_MAX - X_MIN) * i / N;
+    const density = Math.exp(-0.5 * ((v - mu) / sigma) ** 2) / (sigma * Math.sqrt(2 * Math.PI));
+    const cx = mapX(v).toFixed(1);
+    const cy = mapY(density * BIN_W).toFixed(1);
+    curvePath += i === 0 ? `M ${cx},${cy}` : ` L ${cx},${cy}`;
+  }
+  s += `<path d="${curvePath}" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" opacity="0.6"/>`;
+
+  // Mean vertical line + label
+  const xMu = mapX(mu).toFixed(1);
+  s += `<line x1="${xMu}" y1="${MT}" x2="${xMu}" y2="${MT + PH}" stroke="rgba(88,166,255,0.7)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  s += `<text x="${xMu}" y="${MT - 5}" text-anchor="middle" font-size="9" fill="var(--blue)" font-family="${FONT}">μ ${mu > 0 ? '+' : ''}${mu.toFixed(1)}%</text>`;
+
+  // X axis tick labels (every 20%)
+  for (let v = -60; v <= 60; v += 20) {
+    const x = mapX(v).toFixed(1);
+    s += `<text x="${x}" y="${MT + PH + 14}" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="${FONT}">${v > 0 ? '+' : ''}${v}%</text>`;
+  }
+
+  // X axis caption
+  const captY = (MT + PH + 30).toFixed(1);
+  const captX = (ML + PW / 2).toFixed(1);
+  s += `<text x="${captX}" y="${captY}" text-anchor="middle" font-size="9.5" fill="var(--muted)" font-family="${FONT}">Annual Return</text>`;
+
+  // Probability of loss annotation (bottom-left)
+  const pLoss = normalCDF((0 - mu) / sigma);
+  s += `<text x="${(ML + 4).toFixed(1)}" y="${(MT + PH - 6).toFixed(1)}" font-size="9" fill="#f85149" font-family="${FONT}" opacity="0.85">${(pLoss * 100).toFixed(0)}% loss yrs</text>`;
+
+  // Chart border
+  s += `<rect x="${ML}" y="${MT}" width="${PW}" height="${PH}" fill="none" stroke="var(--border)" stroke-width="1"/>`;
+
+  svg.setAttribute('viewBox', `0 0 ${VW} ${VH}`);
+  svg.innerHTML = s;
 }
 
 function updateSnapshot(equity) {
