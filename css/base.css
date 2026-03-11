@@ -134,9 +134,10 @@ footer {
 .tab-tip::after {
   content: attr(data-tip);
   position: absolute;
-  top: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
+  bottom: calc(100% + 10px);
+  right: 0;
+  left: auto;
+  transform: none;
   background: var(--surface2);
   border: 1px solid var(--border);
   color: var(--text);

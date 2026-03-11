@@ -133,12 +133,22 @@ function init() {
   });
 
   // ── Tab switching ────────────────────────────────────────────
+  const TAB_TIPS = {
+    risk:       'Explore how your stock/bond mix affects historical risk and return. Use the slider to compare volatility, worst-year losses, and recovery times across allocations.',
+    allocation: 'Compare two ETF portfolios side by side. Set allocations for Portfolio A and B to see factor exposures, expected returns, costs, and a 30-year growth projection.',
+    tey:        'Compare after-tax yields across bond and money market funds at your federal tax bracket. Update the yields to current values, then see which fund wins for your situation.',
+  };
+  const tabTipDot = document.getElementById('tab-tip-dot');
+  const setTabTip = tab => tabTipDot.dataset.tip = TAB_TIPS[tab] ?? '';
+  setTabTip('risk');
+
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      setTabTip(btn.dataset.tab);
       // Re-render risk charts once the tab is visible (SVG layout is unavailable while hidden)
       if (btn.dataset.tab === 'risk') renderRiskCharts();
     });
