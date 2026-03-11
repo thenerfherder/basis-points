@@ -140,18 +140,23 @@ function init() {
   };
   const tabTipDot = document.getElementById('tab-tip-dot');
   const setTabTip = tab => tabTipDot.dataset.tip = TAB_TIPS[tab] ?? '';
-  setTabTip('risk');
+
+  const switchTab = tab => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+    if (btn) btn.classList.add('active');
+    document.getElementById('tab-' + tab)?.classList.add('active');
+    setTabTip(tab);
+    sessionStorage.setItem('bpTab', tab);
+    if (tab === 'risk') renderRiskCharts();
+  };
+
+  const savedTab = sessionStorage.getItem('bpTab') ?? 'risk';
+  switchTab(savedTab);
 
   document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-      setTabTip(btn.dataset.tab);
-      // Re-render risk charts once the tab is visible (SVG layout is unavailable while hidden)
-      if (btn.dataset.tab === 'risk') renderRiskCharts();
-    });
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
   // ── TEY tool ────────────────────────────────────────────────
